@@ -104,6 +104,78 @@ Image c_Cloud::Img_Save;
 
 c_Cloud Clouds[CLOUD_COUNT];
 
+class c_Frog {
+public:
+	static Image Img_Save[2][2][2];
+	static float Map_Offset[2];
+	static float Map_Base_Angle[2];
+	Rect Rct;
+	Image* Img;
+	float x, y, vx, vy;
+	int Player;
+	int Drt, Anim;
+	int Prepare_Stt;
+	bool Is_Jumping;
+	bool Is_Jump_Pressed;
+	float Angle;
+	int Angle_Drt;
+	int Score;
+
+	void Init(int _Player) {
+		Player = _Player;
+		Drt = 1 - Player;
+		Anim = 0;
+		float Offset = 11.0f * CELL_SIZE * (Player == 0 ? -1 : 1);
+		x = WIDTH / 2 + Offset;
+		y = CELL_SIZE * 2.0f;
+		Prepare_Stt = 0;
+		Is_Jumping = false;
+		Is_Jump_Pressed = false;
+		Update_Image();
+		Update_Rect();
+	}
+
+	void Update_Image() { Img = &Img_Save[Player][Drt][Anim]; }
+
+	void Update_Rect() {
+		Rct.Left = x - Img->w / 2;
+		Rct.Right = Rct.Left + Img->w;
+		Rct.Bottom = y;
+		Rct.Top = Rct.Bottom + Img->h;
+	}
+
+	void Draw() {
+		Map_Texture(Img);
+		Draw_Rect(&Rct);
+	}
+
+	static void Load_Image() {
+		Image Img;
+		Load_Texture(&Img, "Images/Frogs.png");
+		Crop_Image(&Img, &Img_Save[0][1][0], 0, 0, 18, 16);
+		Crop_Image(&Img, &Img_Save[0][1][1], 0, 16, 18, 16);
+		Crop_Image(&Img, &Img_Save[1][1][0], 18, 0, 18, 16);
+		Crop_Image(&Img, &Img_Save[1][1][1], 18, 16, 18, 16);
+		Swap_Image(Img_Save[0][1][0].img, 18, 16);
+		Swap_Image(Img_Save[0][1][1].img, 18, 16);
+		Swap_Image(Img_Save[1][1][0].img, 18, 16);
+		Swap_Image(Img_Save[1][1][1].img, 18, 16);
+		Zoom_Image(&Img_Save[0][1][0], SCALE);
+		Zoom_Image(&Img_Save[0][1][1], SCALE);
+		Zoom_Image(&Img_Save[1][1][0], SCALE);
+		Zoom_Image(&Img_Save[1][1][1], SCALE);
+		Flip_Horizontal(&Img_Save[0][1][0], &Img_Save[0][0][0]);
+		Flip_Horizontal(&Img_Save[0][1][1], &Img_Save[0][0][1]);
+		Flip_Horizontal(&Img_Save[1][1][0], &Img_Save[1][0][0]);
+		Flip_Horizontal(&Img_Save[1][1][1], &Img_Save[1][0][1]);
+		Delete_Image(&Img);
+	}
+};
+Image c_Frog::Img_Save[2][2][2];
+float c_Frog::Map_Offset[2] = { -1.0f, 1.0f };
+float c_Frog::Map_Base_Angle[2] = { 160.0f, 20.0f };
+
+c_Frog Frogs[2];
 
 void Display() {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -121,6 +193,10 @@ void Display() {
 
 	for (int i = 0; i < PLATFORMER_COUNT; i++)
 		Platformers[i].Draw();
+
+	Frogs[0].Draw();
+	Frogs[1].Draw();
+
 	glutSwapBuffers();
 }
 
@@ -139,6 +215,8 @@ void Init_Game() {
 
 	c_Platformer::Load_Image();
 	c_Cloud::Load_Image();
+	c_Frog::Load_Image();
+	
 
 	Platformers[0].Init(7, 5);
 	Platformers[1].Init(19, 5);
@@ -152,6 +230,9 @@ void Init_Game() {
 	Clouds[1].Init(930.0f, 300.0f);
 	Clouds[2].Init(240.0f, 255.0f);
 
+	Frogs[0].Init(0);
+	Frogs[1].Init(1);
+	
 
 
 
