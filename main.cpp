@@ -18,6 +18,8 @@
 
 #define PLATFORMER_COUNT 6
 
+#define CLOUD_COUNT 3
+
 #define CELL_SIZE 24
 #define	MAX_X 30
 #define MAX_Y 24
@@ -62,6 +64,45 @@ Image c_Platformer::Img_Save;
 
 c_Platformer Platformers[PLATFORMER_COUNT];
 
+class c_Cloud {
+public:
+	static Image Img_Save;
+	static void Load_Image() {
+		Load_Texture_Swap(&Img_Save, "Images/Cloud.png");
+		Zoom_Image(&Img_Save, SCALE);
+	}
+
+	Rect Rct;
+	Image *Img;
+
+	float x, y;
+
+	void Init(float _x, float _y) {
+		Img = &Img_Save;
+		x = _x;
+		y = -y;
+		Update_Rect();
+		Rct.Bottom = y;
+		Rct.Top = Rct.Bottom + Img->h;
+	}
+	void Draw() {
+		Map_Texture(Img);
+		Draw_Rect(&Rct);
+	}
+	void Update_Rect() {
+		Rct.Left = x - Img->w / 2;
+		Rct.Right = Rct.Left + Img->w;
+	}
+	void Update() {
+		x -= 0.3f;
+		if (x < -120.0f)
+			x += 1080.0f;
+		Update_Rect();
+	}
+};
+Image c_Cloud::Img_Save;
+
+c_Cloud Clouds[CLOUD_COUNT];
 
 
 void Display() {
@@ -72,6 +113,11 @@ void Display() {
 	Draw_Rect(&Rct_Background);
 	Map_Texture(&Img_Ground);
 	Draw_Rect(&Rct_Ground);
+
+	for (int i = 0; i < CLOUD_COUNT; i++)
+		Clouds[i].Draw();
+	
+
 
 	for (int i = 0; i < PLATFORMER_COUNT; i++)
 		Platformers[i].Draw();
@@ -92,6 +138,7 @@ void Init_Game() {
 			Map[i][j] = 0;
 
 	c_Platformer::Load_Image();
+	c_Cloud::Load_Image();
 
 	Platformers[0].Init(7, 5);
 	Platformers[1].Init(19, 5);
@@ -99,6 +146,12 @@ void Init_Game() {
 	Platformers[3].Init(22, 9);
 	Platformers[4].Init(9, 13);
 	Platformers[5].Init(17, 13);
+
+
+	Clouds[0].Init(570.0f, 210.0f);
+	Clouds[1].Init(930.0f, 300.0f);
+	Clouds[2].Init(240.0f, 255.0f);
+
 
 
 
@@ -125,7 +178,9 @@ void Init_GL() {
 
 
 void Timer(int value) {
-	
+	for (int i = 0; i < CLOUD_COUNT; i++)
+		Clouds[i].Update();
+
 	glutPostRedisplay();
 	glutTimerFunc(INTERVAL, Timer, 0);
 }
