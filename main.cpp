@@ -16,9 +16,52 @@
 
 #define SCALE 3
 
+#define PLATFORMER_COUNT 6
+
+#define CELL_SIZE 24
+#define	MAX_X 30
+#define MAX_Y 24
+
 Rect Rct_Background = { 0, 720, 48, 384 }, Rct_Ground = { 0, 720, 0, 48 };
 
 Image Img_Background, Img_Ground;
+
+int Map[MAX_Y][MAX_X];
+
+class c_Platformer {
+public:
+	static Image Img_Save;
+	static void Load_Image() {
+		Load_Texture_Swap(&Img_Save, "Images/Platformer.png");
+		Zoom_Image(&Img_Save, SCALE);
+	}
+
+	Rect Rct;
+	Image* Img;
+
+	void Init(int _x, int _y) {
+		Map[_y][_x] = Map[_y][_x + 1] = Map[_y][_x + 2] = Map[_y][_x + 3] = 1;
+		Img = &Img_Save;
+		float x = (_x + 2) * CELL_SIZE;
+		float y = _y * CELL_SIZE;
+		Rct.Left = x - Img->w / 2;
+		Rct.Right = Rct.Left + Img->w;
+		Rct.Bottom = y;
+		Rct.Top = Rct.Bottom + Img->h;
+	}
+
+
+	void Draw() {
+		Map_Texture(Img);
+		Draw_Rect(&Rct);
+	}
+
+};
+
+Image c_Platformer::Img_Save;
+
+c_Platformer Platformers[PLATFORMER_COUNT];
+
 
 
 void Display() {
@@ -30,6 +73,8 @@ void Display() {
 	Map_Texture(&Img_Ground);
 	Draw_Rect(&Rct_Ground);
 
+	for (int i = 0; i < PLATFORMER_COUNT; i++)
+		Platformers[i].Draw();
 	glutSwapBuffers();
 }
 
@@ -38,6 +83,25 @@ void Init_Game() {
 	Zoom_Image(&Img_Background, SCALE);
 	Load_Texture_Swap(&Img_Ground, "Images/Ground.png");
 	Zoom_Image(&Img_Ground, SCALE);
+
+	for (int i = 0; i < 2; i++)
+		for (int j = 0; j < MAX_X; j++)
+			Map[i][j] = 1;
+	for (int i = 2; i < MAX_Y; i++)
+		for (int j = 0; j < MAX_X; j++)
+			Map[i][j] = 0;
+
+	c_Platformer::Load_Image();
+
+	Platformers[0].Init(7, 5);
+	Platformers[1].Init(19, 5);
+	Platformers[2].Init(4, 9);
+	Platformers[3].Init(22, 9);
+	Platformers[4].Init(9, 13);
+	Platformers[5].Init(17, 13);
+
+
+
 }
 
 void Init_GL() {
