@@ -30,6 +30,8 @@ Image Img_Background, Img_Ground;
 
 int Map[MAX_Y][MAX_X];
 
+float Gravity = -1.2f;
+
 class c_Platformer {
 public:
 	static Image Img_Save;
@@ -149,6 +151,41 @@ public:
 		Draw_Rect(&Rct);
 	}
 
+	void Jump() {
+		if (!Is_Jumping) {
+			Is_Jumping = true;
+			Anim = 1;
+			Update_Image();
+		}
+	}
+
+
+	void Update() {
+		if (Is_Jumping) {
+			float y_old = y;
+			x += vx;
+			y += vy;
+			vy += Gravity;
+			if (vy < -24.0f)
+				vy = -24.0f;
+			if (vy <= 0.0f) {
+				int col1 = (x - 9.0f) / CELL_SIZE;
+				int col2 = (x + 9.0f) / CELL_SIZE;
+				int row_old = y_old / CELL_SIZE;
+				int row = y / CELL_SIZE;
+				if ((!Map[row_old][col1] && !Map[row_old][col2]) &&
+					(Map[row][col1] || Map[row][col2])) {
+					Is_Jumping = false;
+					y = (row + 1) * CELL_SIZE;
+					vx = 0.0f;
+					vy = 0.0f;
+					Anim = 0;
+					Update_Image();
+				}
+			}
+			Update_Rect();
+		}
+	}
 	static void Load_Image() {
 		Image Img;
 		Load_Texture(&Img, "Images/Frogs.png");
@@ -266,6 +303,24 @@ void Timer(int value) {
 	glutTimerFunc(INTERVAL, Timer, 0);
 }
 
+void Keyboard_Down(GLubyte key, int x, int y) {
+	switch (key) {
+	case 32:
+		break;
+	case 13:
+		break;
+	}
+}
+
+void Keyboard_Up(GLubyte key, int x, int y) {
+	switch (key) {
+	case 32:
+		break;
+	case 13:
+		break;
+	}
+}
+
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
@@ -278,6 +333,10 @@ int main(int argc, char** argv) {
 	Init_GL();
 	glutDisplayFunc(Display);
 	glutTimerFunc(0, Timer, 0);
+
+	glutKeyboardFunc(Keyboard_Down);
+	glutKeyboardUpFunc(Keyboard_Up);
+	
 
 	glutMainLoop();
 	return 0;
