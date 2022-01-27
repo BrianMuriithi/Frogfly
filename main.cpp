@@ -80,7 +80,7 @@ public:
 	void Init(float _x, float _y) {
 		Img = &Img_Save;
 		x = _x;
-		y = -y;
+		y = _y;
 		Update_Rect();
 		Rct.Bottom = y;
 		Rct.Top = Rct.Bottom + Img->h;
