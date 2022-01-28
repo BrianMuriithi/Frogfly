@@ -37,6 +37,7 @@ float Gravity = -1.2f;
 
 float BOUNDARY_LEFT = 30.0f, BOUNDARY_RIGHT = 690.0f;
 
+Image Img_Numbers[10];
 class c_Platformer {
 public:
 	static Image Img_Save;
@@ -291,10 +292,12 @@ c_Spawn_Flies Spawn_Flies(2);
 class c_Frog {
 public:
 	static Image Img_Save[2][2][2];
+	static Image Img_Button_Save[2], Img_Button_Shadow;
 	static float Map_Offset[2];
 	static float Map_Base_Angle[2];
-	Rect Rct;
-	Image* Img;
+
+	Rect Rct, Rct_Button, Rct_Button_Shadow, Rct_Score;
+	Image *Img, *Img_Button, *Img_Score;
 	float x, y, vx, vy;
 	int Player;
 	int Drt, Anim;
@@ -303,6 +306,7 @@ public:
 	bool Is_Jump_Pressed;
 	float Angle;
 	int Angle_Drt;
+
 	int Score;
 
 	void Init(int _Player) {
@@ -315,8 +319,30 @@ public:
 		Prepare_Stt = 0;
 		Is_Jumping = false;
 		Is_Jump_Pressed = false;
+
 		Update_Image();
 		Update_Rect();
+
+		Offset *= 1.2f;
+		Img_Button = &Img_Button_Save[Player];
+		Rct_Button.Left = WIDTH / 2 + Offset - Img_Button->w / 2;
+		Rct_Button.Right = Rct_Button.Left + Img_Button->w;
+		Rct_Button.Bottom = 24.0f;
+		Rct_Button.Top = Rct_Button.Bottom + Img_Button->h;
+
+		Rct_Button_Shadow.Left = Rct_Button.Left + 12.0f;
+		Rct_Button_Shadow.Right = Rct_Button.Right + 12.0f;
+		Rct_Button_Shadow.Bottom = Rct_Button.Bottom - 12.0f;
+		Rct_Button_Shadow.Top = Rct_Button.Top - 12.0f;
+
+		Score = 0;
+
+		Offset *= 0.4f;
+		Img_Score = &Img_Numbers[Score];
+		Rct_Score.Left = WIDTH / 2 + Offset - Img_Score->w / 2;
+		Rct_Score.Right = Rct_Score.Left + Img_Score->w;
+		Rct_Score.Bottom = 18.0f;
+		Rct_Score.Top = Rct_Score.Bottom + Img_Score->h;
 	}
 
 	void Update_Image() { Img = &Img_Save[Player][Drt][Anim]; }
@@ -333,6 +359,18 @@ public:
 		Draw_Rect(&Rct);
 	}
 
+	void Draw_Button() {
+		Map_Texture(&Img_Button_Shadow);
+		Draw_Rect(&Rct_Button_Shadow);
+		Map_Texture(Img_Button);
+		Draw_Rect(&Rct_Button);
+	}
+
+	void Draw_Score() {
+		Map_Texture(Img_Score);
+		Draw_Rect(&Rct_Score);
+	}
+
 	void Jump() {
 		if (!Is_Jumping) {
 			Is_Jumping = true;
@@ -343,10 +381,18 @@ public:
 
 	void Key_Down() {
 		Is_Jump_Pressed = true;
+		Rct_Button.Left += 4.0f;
+		Rct_Button.Right += 4.0f;
+		Rct_Button.Bottom -= 4.0f;
+		Rct_Button.Top -= 4.0f;
 	}
 
 	void Key_Up() {
 		Is_Jump_Pressed = false;
+		Rct_Button.Left -= 4.0f;
+		Rct_Button.Right -= 4.0f;
+		Rct_Button.Bottom += 4.0f;
+		Rct_Button.Top += 4.0f;
 		
 	}
 
@@ -432,6 +478,7 @@ public:
 				if (it->Is_Caught(x, y)) {
 					it = Flies.erase(it);
 					Score++;
+					Img_Score = &Img_Numbers[Score];
 				}
 				else
 					it++;
@@ -482,9 +529,23 @@ public:
 		Flip_Horizontal(&Img_Save[1][1][0], &Img_Save[1][0][0]);
 		Flip_Horizontal(&Img_Save[1][1][1], &Img_Save[1][0][1]);
 		Delete_Image(&Img);
+
+		Load_Texture(&Img, "Images/Buttons.png");
+		Crop_Image(&Img, &Img_Button_Save[0], 0, 0, 44, 24);
+		Crop_Image(&Img, &Img_Button_Save[1], 0, 24, 44, 24);
+		Swap_Image(Img_Button_Save[0].img, 44, 24);
+		Swap_Image(Img_Button_Save[1].img, 44, 24);
+		Zoom_Image(&Img_Button_Save[0], SCALE);
+		Zoom_Image(&Img_Button_Save[1], SCALE);
+
+		unsigned char Color_Shadow[] = { 0, 0, 0, 50 };
+		Clone_Image_Shadow(&Img_Button_Save[0], &Img_Button_Shadow,
+			Color_Shadow);
+		Delete_Image(&Img);
 	}
 };
-Image c_Frog::Img_Save[2][2][2];
+Image c_Frog::Img_Save[2][2][2], c_Frog::Img_Button_Save[2],
+c_Frog::Img_Button_Shadow;
 float c_Frog::Map_Offset[2] = { -1.0f, 1.0f };
 float c_Frog::Map_Base_Angle[2] = { 160.0f, 20.0f };
 bool (*c_Frog::Check_Boundary[2])(float x) = { c_Frog::Check_Boundary_Left, c_Frog::Check_Boundary_Right };
