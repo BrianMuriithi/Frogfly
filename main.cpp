@@ -24,6 +24,9 @@
 #define	MAX_X 30
 #define MAX_Y 24
 
+#define PI 3.141592
+#define RAD 57.295780
+
 Rect Rct_Background = { 0, 720, 48, 384 }, Rct_Ground = { 0, 720, 0, 48 };
 
 Image Img_Background, Img_Ground;
@@ -31,6 +34,8 @@ Image Img_Background, Img_Ground;
 int Map[MAX_Y][MAX_X];
 
 float Gravity = -1.2f;
+
+float BOUNDARY_LEFT = 30.0f, BOUNDARY_RIGHT = 690.0f;
 
 class c_Platformer {
 public:
@@ -106,6 +111,52 @@ Image c_Cloud::Img_Save;
 
 c_Cloud Clouds[CLOUD_COUNT];
 
+class c_Line {
+public:
+	static Image Img_Save[2];
+	static Rect Rct;
+	Image* Img;
+	float x, y, Angle;
+	int Player;
+	c_Line(int _Player, float _x, float _y, float _Angle) {
+		Player = _Player;
+		x = _x;
+		y = _y;
+		Angle = _Angle;
+		Img = &Img_Save[Player];
+	}
+
+	void Draw() {
+		glTranslatef(x, y, 0.0f);
+		glRotatef(Angle, 0.0f, 0.0f, 1.0f);
+		Map_Texture(Img);
+		Draw_Rect(&Rct);
+		glLoadIdentity();
+	}
+
+	static void Load_Image() {
+		Image Img;
+		Load_Texture(&Img, "Images/Lines.png");
+		Crop_Image(&Img, &Img_Save[0], 0, 0, 8, 4);
+		Crop_Image(&Img, &Img_Save[1], 0, 4, 8, 4);
+		Zoom_Image(&Img_Save[0], SCALE);
+		Zoom_Image(&Img_Save[1], SCALE);
+		Delete_Image(&Img);
+		Rct.Left = -12.0f;
+		Rct.Right = 12.0f;
+		Rct.Bottom = -8.0f;
+		Rct.Top = 8.0f;
+	}
+};
+
+Image c_Line::Img_Save[2];
+Rect c_Line::Rct;
+
+std::vector<c_Line> Lines;
+
+
+
+
 class c_Frog {
 public:
 	static Image Img_Save[2][2][2];
@@ -170,8 +221,55 @@ public:
 		Jump();
 	}
 
+	void Prepare_Start() {
+		if (Prepare_Stt == 0) {
+			Prepare_Stt = 1;
+			Angle_Drt = Drt;
+			Angle = Map_Base_Angle[Drt];
+		}
+	}
+
+	void Prepare_End() {
+		if (Prepare_Stt == 1)
+			Prepare_Stt = 2;
+	}
+
 	void Update() {
-		if (Is_Jumping) {
+
+		if (!Is_Jumping) {
+			if (Is_Jump_Pressed)
+				Prepare_Start();
+			else
+				Prepare_End();
+			if (Prepare_Stt > 0) {
+				if (Prepare_Stt == 2) {
+					Prepare_Stt = 0;
+					Jump();
+				}
+				else {
+					Angle += Map_Offset[Angle_Drt];
+					if (Check_Angle[Drt][Angle_Drt](Angle))
+						Angle_Drt = 1 - Angle_Drt;
+					float Angle2 = Angle / RAD;
+					float x2 = x, y2 = y + 4.0f, vx2, vy2;
+					vx2 = cos(Angle2) * 4 + (Drt == 0 ? Angle2 - PI : Angle2) * 9;
+					vy2 = sin(Angle2) * 21;
+					vx = vx2;
+					vy = vy2;
+					for (int i = 0; i < 18; i++) {
+						x2 += vx2;
+						y2 += vy2;
+						if (i % 3 == 2) {
+							Angle2 = atan2(vy2, vx2) * RAD;
+							Lines.push_back(c_Line(Player, x2, y2, Angle2));
+						}
+						vy2 += Gravity;
+					}
+				}
+			}
+		}
+		else {
+
 			float y_old = y;
 			x += vx;
 			y += vy;
@@ -193,9 +291,36 @@ public:
 					Update_Image();
 				}
 			}
+
+			if (Check_Boundary[Drt](x)) {
+				Drt = 1 - Drt;
+				vx = -vx;
+				Update_Image();
+			}
+
 			Update_Rect();
 		}
+		
 	}
+
+	static bool Check_Boundary_Left(float x) { return x < BOUNDARY_LEFT; }
+	static bool Check_Boundary_Right(float x) { return x > BOUNDARY_RIGHT; }
+	static bool (*Check_Boundary[2])(float x);
+	static bool Check_Angle_Left_Decrease(float Angle) {
+		return Angle <= 110.0f;
+	}
+	static bool Check_Angle_Left_Increase(float Angle) {
+		return Angle >= 160.0f;
+	}
+	static bool Check_Angle_Right_Decrease(float Angle) {
+		return Angle <= 20.0f;
+	}
+	static bool Check_Angle_Right_Increase(float Angle) {
+		return Angle >= 70.0f;
+	}
+	static bool (*Check_Angle[2][2])(float Angle);
+
+
 	static void Load_Image() {
 		Image Img;
 		Load_Texture(&Img, "Images/Frogs.png");
@@ -221,6 +346,11 @@ public:
 Image c_Frog::Img_Save[2][2][2];
 float c_Frog::Map_Offset[2] = { -1.0f, 1.0f };
 float c_Frog::Map_Base_Angle[2] = { 160.0f, 20.0f };
+bool (*c_Frog::Check_Boundary[2])(float x) = { c_Frog::Check_Boundary_Left, c_Frog::Check_Boundary_Right };
+bool (*c_Frog::Check_Angle[2][2])(float Angle) = {
+	{Check_Angle_Left_Decrease, Check_Angle_Left_Increase},
+	{Check_Angle_Right_Decrease, Check_Angle_Right_Increase} };
+
 
 c_Frog Frogs[2];
 
@@ -230,6 +360,12 @@ void Display() {
 
 	Map_Texture(&Img_Background);
 	Draw_Rect(&Rct_Background);
+
+	for (c_Line Line : Lines)
+		Line.Draw();
+
+
+
 	Map_Texture(&Img_Ground);
 	Draw_Rect(&Rct_Ground);
 
@@ -263,6 +399,7 @@ void Init_Game() {
 	c_Platformer::Load_Image();
 	c_Cloud::Load_Image();
 	c_Frog::Load_Image();
+	c_Line::Load_Image();
 	
 
 	Platformers[0].Init(7, 5);
@@ -308,6 +445,8 @@ void Init_GL() {
 void Timer(int value) {
 	for (int i = 0; i < CLOUD_COUNT; i++)
 		Clouds[i].Update();
+
+	Lines.clear();
 
 	Frogs[0].Update();
 	Frogs[1].Update();
