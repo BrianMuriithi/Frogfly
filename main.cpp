@@ -12,17 +12,17 @@
 
 #define HEIGHT 384
 
-#define INTERVAL 15
+#define INTERVAL 15 
 
 #define SCALE 3
 
-#define PLATFORMER_COUNT 6
+#define PLATFORMER_COUNT 6 //Platmforms
 
-#define CLOUD_COUNT 3
+#define CLOUD_COUNT 3 //Clouds
 
 #define CELL_SIZE 24
-#define	MAX_X 30
-#define MAX_Y 24
+#define	MAX_X 30 //Columns
+#define MAX_Y 24 //Rows
 
 #define PI 3.141592
 #define RAD 57.295780
@@ -35,9 +35,11 @@ int Map[MAX_Y][MAX_X];
 
 float Gravity = -1.2f;
 
-float BOUNDARY_LEFT = 30.0f, BOUNDARY_RIGHT = 690.0f;
+float BOUNDARY_LEFT = 30.0f, BOUNDARY_RIGHT = 690.0f;  //game boundaaries for flies
 
 Image Img_Numbers[10];
+
+//Platforms
 class c_Platformer {
 public:
 	static Image Img_Save;
@@ -72,6 +74,7 @@ Image c_Platformer::Img_Save;
 
 c_Platformer Platformers[PLATFORMER_COUNT];
 
+//Clouds
 class c_Cloud {
 public:
 	static Image Img_Save;
@@ -112,6 +115,7 @@ Image c_Cloud::Img_Save;
 
 c_Cloud Clouds[CLOUD_COUNT];
 
+//Aiming line
 class c_Line {
 public:
 	static Image Img_Save[2];
@@ -155,6 +159,7 @@ Rect c_Line::Rct;
 
 std::vector<c_Line> Lines;
 
+//Flies
 class c_Fly {
 public:
 	static Image Img_Save[2];
