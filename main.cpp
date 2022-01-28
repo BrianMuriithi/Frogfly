@@ -159,6 +159,16 @@ public:
 		}
 	}
 
+	void Key_Down() {
+		Is_Jump_Pressed = true;
+	}
+
+	void Key_Up() {
+		Is_Jump_Pressed = false;
+		vx = 10.0f;
+		vy = 10.0f;
+		Jump();
+	}
 
 	void Update() {
 		if (Is_Jumping) {
@@ -299,6 +309,9 @@ void Timer(int value) {
 	for (int i = 0; i < CLOUD_COUNT; i++)
 		Clouds[i].Update();
 
+	Frogs[0].Update();
+	Frogs[1].Update();
+
 	glutPostRedisplay();
 	glutTimerFunc(INTERVAL, Timer, 0);
 }
@@ -306,8 +319,10 @@ void Timer(int value) {
 void Keyboard_Down(GLubyte key, int x, int y) {
 	switch (key) {
 	case 32:
+		Frogs[0].Key_Down();
 		break;
 	case 13:
+		Frogs[1].Key_Down();
 		break;
 	}
 }
@@ -315,8 +330,10 @@ void Keyboard_Down(GLubyte key, int x, int y) {
 void Keyboard_Up(GLubyte key, int x, int y) {
 	switch (key) {
 	case 32:
+		Frogs[0].Key_Up();
 		break;
 	case 13:
+		Frogs[1].Key_Up();
 		break;
 	}
 }
