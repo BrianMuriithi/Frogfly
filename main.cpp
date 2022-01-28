@@ -216,9 +216,7 @@ public:
 
 	void Key_Up() {
 		Is_Jump_Pressed = false;
-		vx = 10.0f;
-		vy = 10.0f;
-		Jump();
+		
 	}
 
 	void Prepare_Start() {
