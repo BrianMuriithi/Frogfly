@@ -1,8 +1,8 @@
 ﻿#include <math.h>
 
-#include <GL/glut.h>
+#include <GL/glut.h> 
 
-#include <vector>
+#include <vector> #store list
 
 #include "../Library/loadpng.h"
 #include "../Library/process_image.h"
